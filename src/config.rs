@@ -14,6 +14,14 @@ fn config_dir() -> Result<BaseDirectories> {
     Ok(BaseDirectories::with_prefix(APPNAME)?)
 }
 
+pub(crate) fn config_dir_path() -> Result<PathBuf> {
+    config_dir()?
+        .get_config_dirs()
+        .first()
+        .cloned()
+        .ok_or(Error::Config(format!("No config dirs available")))
+}
+
 /// `ca_key_file` returns a absolute [`PathBuf`]` to the CA signing key within the
 /// `XDG_CONFIG_HOME` / tlsglue.
 pub(crate) fn ca_key_file() -> Result<PathBuf> {
