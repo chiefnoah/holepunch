@@ -2,7 +2,7 @@ use crate::error::{Error, Result};
 use std::path::PathBuf;
 use xdg::{BaseDirectories, BaseDirectoriesError};
 
-pub const APPNAME: &str = "tlsglue";
+pub const APPNAME: &str = "holepunch";
 
 impl From<BaseDirectoriesError> for Error {
     fn from(value: BaseDirectoriesError) -> Self {
@@ -23,7 +23,7 @@ pub(crate) fn config_dir_path() -> Result<PathBuf> {
 }
 
 /// `ca_key_file` returns a absolute [`PathBuf`]` to the CA signing key within the
-/// `XDG_CONFIG_HOME` / tlsglue.
+/// `XDG_CONFIG_HOME` / holepunch.
 pub(crate) fn ca_key_file() -> Result<PathBuf> {
     Ok(config_dir()?.place_config_file("root-ca.key")?)
 }
