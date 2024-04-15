@@ -5,6 +5,7 @@ use std::io::{Error as IOError, ErrorKind};
 pub enum Error {
     Config(String),
     IO(ErrorKind),
+    Certificate(String),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
