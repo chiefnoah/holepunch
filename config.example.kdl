@@ -1,0 +1,8 @@
+// The ca may be externally managed
+ca managed=true certificate="./root-ca.cert" key="./root-ca.key"
+
+
+profiles {
+  profile name="profile-1" certificate="./profile-1.cert"
+  profile name="profile-2" certificate="./profile-2.cert"
+}

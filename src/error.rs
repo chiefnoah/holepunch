@@ -6,6 +6,7 @@ pub enum Error {
     Config(String),
     IO(ErrorKind),
     Certificate(String),
+    ConfigParse(String),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

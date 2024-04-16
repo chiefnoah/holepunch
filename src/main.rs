@@ -3,12 +3,11 @@ mod ca;
 mod config;
 mod error;
 
+use crate::config::{ca_certificate_file, ca_key_file, config_dir_path};
 use crate::error::Result;
-use crate::{
-    ca::ensure_ca,
-    config::{ca_certificate_file, ca_key_file, config_dir_path},
-};
+use ca::{ensure_ca, load_ca};
 use clap::{arg, command, value_parser, Command};
+use config::load_config;
 use std::path::PathBuf;
 
 fn main() -> Result<()> {
@@ -31,11 +30,20 @@ fn main() -> Result<()> {
 
     let config_path = matches
         .get_one::<PathBuf>("config")
-        .or(Some(&config_dir_path().expect("XDG config dir")));
+        .cloned()
+        .or(Some(config_dir_path().expect("XDG config dir")));
+    let config = load_config(config_path)?;
+    let managed: bool = config
+        .get("ca")
+        .map(|node| node["managed"].as_bool().unwrap_or(false))
+        .unwrap_or(true);
 
-    if let Some(init_ca) = matches.subcommand_matches("init-ca") {
-        eprintln!("Initializing CA...");
-        let (keys, ca_params) = ensure_ca(ca_key_file()?, ca_certificate_file()?)?;
-    }
+    // TODO: load the ca_key_file and certificate_file paths from the config file
+    let (keys, ca_params) = if managed {
+        ensure_ca(ca_key_file()?, ca_certificate_file()?)?
+    } else {
+        load_ca(ca_key_file()?, ca_certificate_file()?)?
+    };
+
     Ok(())
 }
