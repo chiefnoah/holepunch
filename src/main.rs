@@ -8,6 +8,7 @@ use crate::error::Result;
 use ca::{ensure_ca, load_ca};
 use clap::{arg, command, value_parser, Command};
 use config::load_config;
+use std::net::TcpListener;
 use std::path::PathBuf;
 
 fn main() -> Result<()> {
@@ -18,13 +19,16 @@ fn main() -> Result<()> {
                 .value_parser(value_parser!(PathBuf)),
         )
         .subcommand(
-            Command::new("init-ca")
-                .about("Initializes the certificate authority")
-                .arg(
-                    arg!(-f --force "Force regenerate CA. This will overwrite existing config.")
-                        .required(false)
-                        .value_parser(value_parser!(bool)),
-                ),
+            Command::new("serve")
+                .about("Runs holepunch in server mode")
+                .arg(arg!(-p --port <PORT> "Specifies the port to bind to"))
+                .arg(arg!(-a --address <ADDRESS> "Specifies the address to bind to")),
+        )
+        .subcommand(
+            Command::new("connect")
+                .about("Runs holepunch in client mode. Connects to specified")
+                .arg(arg!(--stdin "Runs the client in stdin mode."))
+                .arg(arg!(<ADDRESS> "The address of the server to connect to.")),
         )
         .get_matches();
 
@@ -44,6 +48,23 @@ fn main() -> Result<()> {
     } else {
         load_ca(ca_key_file()?, ca_certificate_file()?)?
     };
+
+    if let Some(server) = matches.subcommand_matches("serve") {
+        let port = *matches.get_one::<u16>("port").unwrap_or(&5555);
+        let addr = matches
+            .get_one::<String>("address")
+            .unwrap_or(&"0.0.0.0".to_string());
+        let listener = TcpListener::bind(addr).expect("Unable to bind to port");
+        for stream in listener.incoming() {
+            match stream {
+                Ok(stream) => {
+                    // we probably need to add an evelope around the messages, at least with a size
+                    todo!()
+                },
+                Err(e) => eprintln!("Connection failed"),
+            }
+        }
+    }
 
     Ok(())
 }
