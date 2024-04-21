@@ -1,0 +1,8 @@
+type Ping void
+type Pong void
+
+type Message struct {
+    length: uint
+}
+
+type Envelope union { Ping | Pong | Message }

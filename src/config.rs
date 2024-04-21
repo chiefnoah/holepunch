@@ -1,6 +1,10 @@
 use crate::error::{Error, Result};
 use kdl::{KdlDocument, KdlError};
-use std::{fs::OpenOptions, io::Read, path::PathBuf};
+use std::{
+    fs::OpenOptions,
+    io::{Read, Write},
+    path::PathBuf,
+};
 use xdg::{BaseDirectories, BaseDirectoriesError};
 
 pub const APPNAME: &str = "holepunch";
@@ -22,11 +26,7 @@ fn config_dir() -> Result<BaseDirectories> {
 }
 
 pub(crate) fn config_dir_path() -> Result<PathBuf> {
-    config_dir()?
-        .get_config_dirs()
-        .first()
-        .cloned()
-        .ok_or(Error::Config(format!("No config dirs available")))
+    Ok(config_dir()?.get_config_home())
 }
 
 /// `ca_key_file` returns a absolute [`PathBuf`]` to the CA signing key within the
@@ -48,8 +48,27 @@ pub(crate) fn load_config(config_path: Option<PathBuf>) -> Result<KdlDocument> {
     let mut file = OpenOptions::new()
         .read(true)
         .write(true)
-        .open(config_path)?;
-    let mut contents = String::new();
-    file.read_to_string(&mut contents)?;
-    Ok(contents.parse::<KdlDocument>()?)
+        .create(true)
+        .open(&config_path)?;
+    if config_path.exists() {
+        let mut contents = String::new();
+        file.read_to_string(&mut contents)?;
+        Ok(contents.parse::<KdlDocument>()?)
+    } else {
+        let config = default_config();
+        file.write_all(config.to_string().as_bytes())?;
+        Ok(config)
+    }
+}
+
+fn default_config() -> KdlDocument {
+    r#"
+// The ca may be externally managed
+ca managed=true certificate="./root-ca.cert" key="./root-ca.key"
+
+
+profiles {}
+    "#
+    .parse::<KdlDocument>()
+    .unwrap()
 }

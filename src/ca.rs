@@ -5,7 +5,7 @@ use std::path::PathBuf;
 
 use crate::config::APPNAME;
 use crate::error::{Error, Result};
-use rcgen::{Certificate, CertificateParams, Error as RCGenError, KeyPair};
+use rcgen::{CertificateParams, Error as RCGenError, KeyPair};
 
 const CACOMMONNAME: &str = APPNAME;
 const CACOUNTRY: &str = "NET";
@@ -24,7 +24,7 @@ pub(crate) fn create_ca(ca_key: PathBuf, ca_cert: PathBuf) -> Result<(KeyPair, C
     let key_pair = create_keypair(ca_key)?;
     let cert = create_certificate(&key_pair, ca_cert)?;
 
-    Ok((key_pair, cert.params().clone()))
+    Ok((key_pair, cert.clone()))
 }
 
 fn load_keypair(ca_key: PathBuf) -> Result<KeyPair> {
@@ -72,6 +72,7 @@ pub(crate) fn load_ca(ca_key: PathBuf, ca_cert: PathBuf) -> Result<(KeyPair, Cer
 pub(crate) fn ensure_ca(ca_key: PathBuf, ca_cert: PathBuf) -> Result<(KeyPair, CertificateParams)> {
     let mut did_generate_key_pair = false;
     let key_pair = if !ca_key.exists() {
+        did_generate_key_pair = true;
         create_keypair(ca_key)?
     } else {
         load_keypair(ca_key)?
