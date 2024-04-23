@@ -9,6 +9,30 @@ use xdg::{BaseDirectories, BaseDirectoriesError};
 
 pub const APPNAME: &str = "holepunch";
 
+pub(crate) struct Config {
+    pub ca: CAConfig,
+    pub profiles: Vec<ProfileConfig>,
+}
+
+pub(crate) enum CAConfig {
+    Unmanaged,
+    Managed { certificate: PathBuf, key: PathBuf },
+}
+
+pub(crate) struct ProfileConfig {
+    name: String,
+    certificate: Option<PathBuf>,
+}
+
+// parse a KDL document into our config format.
+impl TryFrom<KdlDocument> for Config {
+    type Error = Error;
+
+    fn try_from(value: KdlDocument) -> std::result::Result<Self, Self::Error> {
+        todo!()
+    }
+}
+
 impl From<BaseDirectoriesError> for Error {
     fn from(value: BaseDirectoriesError) -> Self {
         Self::Config(format!("Configuration error: {value:?}"))

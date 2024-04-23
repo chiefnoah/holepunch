@@ -2,8 +2,9 @@
 mod ca;
 mod config;
 mod error;
+mod serve;
 
-use crate::config::{ca_certificate_file, ca_key_file, config_dir_path};
+use crate::config::{ca_certificate_file, ca_key_file};
 use crate::error::Result;
 use bare_proc::bare_schema;
 use ca::{ensure_ca, load_ca};
@@ -12,7 +13,7 @@ use config::load_config;
 use log::{error, trace};
 use pretty_env_logger;
 use std::io::{self, Read};
-use std::net::TcpListener;
+use std::net::{Ipv4Addr, TcpListener};
 use std::path::PathBuf;
 
 bare_schema!("src/envelope.bare");
@@ -28,10 +29,14 @@ fn main() -> Result<()> {
         .subcommand(
             Command::new("serve")
                 .about("Runs holepunch in server mode")
-                .arg(arg!(-p --port <PORT> "Specifies the port to bind to").default_value("4464"))
+                .arg(
+                    arg!(-p --port <PORT> "Specifies the port to bind to")
+                        .required(false)
+                        .value_parser(value_parser!(u16)),
+                )
                 .arg(
                     arg!(-a --address <ADDRESS> "Specifies the address to bind to")
-                        .default_value("0.0.0.0"),
+                        .value_parser(value_parser!(Ipv4Addr)),
                 ),
         )
         .subcommand(
@@ -57,9 +62,11 @@ fn main() -> Result<()> {
     };
 
     if let Some(server) = matches.subcommand_matches("serve") {
-        let port = *matches.get_one::<u16>("port").unwrap_or(&5555);
-        let addr = *matches.get_one::<&str>("address").unwrap_or(&"0.0.0.0");
-        let listener = TcpListener::bind(addr).expect("Unable to bind to port");
+        let port = *server.get_one::<u16>("port").unwrap_or(&5555);
+        let addr = *server
+            .get_one::<Ipv4Addr>("address")
+            .unwrap_or(&Ipv4Addr::UNSPECIFIED);
+        let listener = TcpListener::bind(format!("{addr}:{port}")).expect("Unable to bind to port");
         for stream in listener.incoming() {
             match &stream {
                 Ok(stream) => {
@@ -86,9 +93,9 @@ fn main() -> Result<()> {
             }
         }
     }
-    if let Some(client) = matches.subcommand_matches("client") {
-        let address = *matches
-            .get_one::<&str>("ADDRESS")
+    if let Some(connect) = matches.subcommand_matches("connect") {
+        let address = connect
+            .get_one::<String>("ADDRESS")
             .expect("Must provide address");
     }
 
