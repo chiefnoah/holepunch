@@ -37,13 +37,15 @@ fn main() -> Result<()> {
                 .arg(
                     arg!(-a --address <ADDRESS> "Specifies the address to bind to")
                         .value_parser(value_parser!(Ipv4Addr)),
-                ),
+                )
+                .arg(arg!([PROFILE] "The profile to use. Defaults to 'default'").required(false)),
         )
         .subcommand(
             Command::new("connect")
                 .about("Runs holepunch in client mode. Connects to specified address")
                 .arg(arg!(<ADDRESS> "The address of the server to connect to."))
-                .arg(arg!(--stdin ... "Runs the client in stdin mode.")),
+                .arg(arg!(--stdin ... "Runs the client in stdin mode."))
+                .arg(arg!([PROFILE] "The profile to use. Defaults to 'default'").required(false)),
         )
         .get_matches();
 

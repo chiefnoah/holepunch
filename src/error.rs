@@ -1,6 +1,5 @@
 use std::io::{Error as IOError, ErrorKind};
 
-
 #[derive(Debug)]
 pub enum Error {
     Config(String),

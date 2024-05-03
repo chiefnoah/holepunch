@@ -32,7 +32,6 @@ fn load_keypair(ca_key: PathBuf) -> Result<KeyPair> {
     let mut contents = String::new();
     file.read_to_string(&mut contents)?;
     Ok(KeyPair::from_pem(&contents)?)
-
 }
 
 fn create_keypair(ca_key: PathBuf) -> Result<KeyPair> {
